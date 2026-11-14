@@ -5,7 +5,7 @@
  * 维度：页面(videos/books/awards/bloggers/详情页) × 语言(zh/en) × 视口(desktop/mobile)
  * URL 方案（RIGE-1021 + RIGE-1080）：每个视图一张真实静态页，带语言前缀 /zh/... /en/...；无前缀地址按浏览器语言跳转
  * 用法：
- *   node scripts/qa-check.mjs                # 测线上 https://tinycove.github.io
+ *   node scripts/qa-check.mjs                # 测线上 https://tinycove.space
  *   node scripts/qa-check.mjs --local        # 测 dist/（需先 npm run build，脚本自带静态服务器）
  *   BASE=http://host node scripts/qa-check.mjs   # 测任意已部署地址
  * 退出码：全部通过 0，任一失败 1
@@ -16,7 +16,7 @@ import { chromium } from 'playwright';
 import { readFileSync } from 'node:fs';
 
 const LOCAL = process.argv.includes('--local');
-let target = (process.env.BASE || 'https://tinycove.github.io').replace(/\/$/, '');
+let target = (process.env.BASE || 'https://tinycove.space').replace(/\/$/, '');
 const results = [];
 let browser;
 let localServer;

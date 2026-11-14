@@ -10,7 +10,7 @@ from Douban and Goodreads communities. Filter by **age / language / topic / plat
 videos play through the platforms' official embeds, and every picture book links to
 Douban and Goodreads.
 
-**Live site**: https://tinycove.github.io/
+**Live site**: https://tinycove.space/
 
 An independent open-source project (MIT), not affiliated with any video platform or publisher.
 

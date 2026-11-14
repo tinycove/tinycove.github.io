@@ -8,7 +8,7 @@
 以及豆瓣、Goodreads 等社区高分儿童绘本，支持按**年龄段 / 语言 / 主题 / 平台**筛选，
 视频通过各平台官方播放器播放，每本绘本提供豆瓣与 Goodreads 链接。
 
-**线上地址**：https://tinycove.github.io/
+**线上地址**：https://tinycove.space/
 
 本项目为独立开源项目（MIT），不隶属于任何视频平台或出版社。
 
