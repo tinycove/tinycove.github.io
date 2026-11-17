@@ -46,6 +46,11 @@
 ## 执行方式
 
 - Review/QA 由主 agent 派发独立 sub agent 完成，**结果以评论形式记入对应 Multica issue**
-- Review 发现的问题直接修复后复审；QA 失败阻断发布
+- Review 发现的问题直接修复后复审，但**复审轮次封顶 `MAX_ROUNDS = 2`**：
+  - 第 1 轮**全量审**（按「审查清单」逐项核对）
+  - 第 2 轮起只审**增量**，不重读全仓。增量复审的输入 = **上轮 review 报告绑定的 SHA** + **上轮 SHA → 本轮 head SHA 的增量 diff** + **上轮仍未关闭的 finding**
+  - 第 2 轮仍有 blocking finding ⇒ **停手并 ESCALATE**（分歧点 / 两种判据 / 复现证据）给 owner，**不自我迭代第 3 轮**
+  - 每轮报告写入 `docs/review-YYYY-MM-DD.md`，须标出**轮次号**与**所审增量范围**，供下一轮复审取用
+- QA 失败阻断发布
 - 清单随 bug 库更新：每修一个新类型 bug，把它的「检查方法」加进对应清单
 - QA 状态矩阵细则见 [docs/qa-matrix.md](qa-matrix.md)
