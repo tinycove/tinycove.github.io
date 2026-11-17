@@ -28,11 +28,12 @@ npm run qa:local     # QA 状态矩阵（对本地 dist/，自动 build）
 | 角色 | 职责 | 触发 |
 |---|---|---|
 | Dev | 功能实现、修复 | 常规 |
-| Review | 按清单审查 diff（7 项） | 每次 UI/管线改动 push 前 |
+| Review | 按清单审查 diff（7 项），最多 MAX_ROUNDS = 2 轮复审 | 每次 UI/管线改动 push 前 |
 | QA | 状态矩阵断言（桌面/手机 × 视频/图书 × 双语） | 每次部署后 |
 
 - Review/QA 由**独立 sub agent** 执行（定义在 `.zcode/agents/`），避免自查盲区
 - Review 结果写入 `docs/review-YYYY-MM-DD.md`，QA 结果写入 `docs/qa-report-*.md`
+- **复审轮次封顶 `MAX_ROUNDS = 2`**：第 1 轮全量审；第 2 轮起只审**增量**（上轮 review 报告绑定的 SHA → 本轮 head SHA 的 diff + 上轮仍未关闭的 finding），不再重读全仓；第 2 轮仍有 blocking finding ⇒ **停手并 ESCALATE**（分歧点 / 两种判据 / 复现证据）给 owner，**不自我迭代第 3 轮**
 - 审查清单与状态矩阵随 bug 库更新：每修一个新类型 bug，把检查方法加进对应清单
 - QA 浏览器操作已脚本化（`scripts/qa-check.mjs`，零 LLM token），agent 只负责读报告与修复失败项
 
