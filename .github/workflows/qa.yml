@@ -1,5 +1,8 @@
 name: QA
 
+# 部署后 canary：Deploy 成功后对线上跑状态矩阵。它不是合并门（合并门 = main 分支保护）；
+# QA 红 = 改动已上线且有问题，需尽快修复后重新部署。详见 docs/agent-workflow.md。
+
 on:
   workflow_run:
     workflows: ["Deploy to GitHub Pages"]

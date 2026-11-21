@@ -1,0 +1,4 @@
+# 全仓库归 kk17 所有：main 分支保护开启「require review from Code Owners」后，
+# 外部贡献者的 PR 必须获得 @kk17 的 approve 才能合并（GitHub 平台强制）。
+# admin 本人可 bypass 分支保护（未勾选 Do not allow bypassing），见 AGENTS.md「质量与合并机制」。
+* @kk17

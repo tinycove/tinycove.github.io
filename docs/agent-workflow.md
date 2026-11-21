@@ -1,25 +1,35 @@
-# Agent 协作工作流（dev / review / QA）
+# 开发与质量工作流（dev / QA）
 
-本项目的功能开发采用**三角色多 agent 协作**。每个角色有明确的职责边界和触发时机。
+> 2026-11-21（RIGE-1834）修订：**reviewer subagent 退役**（`.agents/agents/reviewer.md` 已删除，
+> 原 dev/review/QA 三角色中的 Review 角色不再存在）。
+> 现行机制一句话：**审查 = 作者按清单自查；合并门 = main 分支保护；QA = 部署后 canary（`qa.yml`）**。
 
 ## 角色
 
 | 角色 | 职责 | 执行者 |
 |---|---|---|
-| **Dev** | 功能实现、bug 修复、数据管线 | 主 agent（或人工）|
-| **Review** | 代码审查：在 push 前审计 diff，按下方「审查清单」逐项检查 | 独立 sub agent（不参与该次开发，避免自查盲区）|
-| **QA** | 部署后按「状态矩阵」在真实浏览器跑断言，并截图留证 | 独立 sub agent（有浏览器访问权限）|
+| **Dev** | 功能实现、bug 修复、数据管线；push / 开 PR 前按下方「自查清单」逐项核对 | 主 agent（或人工）|
+| **QA** | 部署后按「状态矩阵」自动化跑断言；失败项由 agent 诊断修复 | GitHub Actions（`scripts/qa-check.mjs`，零 LLM token）|
 
-## 触发时机
+## 质量机制与强制点（与平台配置一致，勿凭记忆写反）
 
-| 变更类型 | Review | QA |
+| 环节 | 机制 | 强制点 |
 |---|---|---|
-| UI 改动（模板/样式/交互）| ✅ 必须 | ✅ 必须（全矩阵）|
-| 数据管线（collect/build/tag）| ✅ 必须 | ✅ 抽样验证产物 |
-| 纯数据快照更新（videos/books.json）| ⭕ 抽查 | ✅ 构建通过 + 抽样页渲染 |
-| 文档 | ⭕ 拼写/链接 | ❌ |
+| 自查 | 作者按 7 项清单核对（下方） | 纪律约束，无服务端强制 |
+| 合并门 | **main 分支保护**：require PR + Code Owners review（`.github/CODEOWNERS` = `* @kk17`） | GitHub 平台强制；admin 可 bypass（见下） |
+| QA | `qa.yml`：Deploy 成功后对线上 <https://tinycove.space> 跑状态矩阵 | **部署后 canary，不阻断合并**（合并时改动已上线）；红 = 线上已出问题，需尽快修复 |
 
-## Review 审查清单（本项目踩过的坑，逐项核对）
+### 分支保护细则（唯一合并门）
+
+- main 开启 branch protection：**require a pull request before merging**（禁止直推）+ **require review from Code Owners**。
+- Code Owners = `@kk17`（全仓），⇒ **外部贡献者的 PR 必须获得 Kyle approve 才能合并**，平台强制。
+- **未勾选「Do not allow bypassing」** ⇒ admin（Kyle）可 bypass；bypass 同时覆盖 required review 与禁止直推，
+  **对 Kyle 本人没有强制力**——强制力来自「Kyle 自己不绕」。这是有意选择：单人维护仓，
+  勾了「Do not allow bypassing」会把主人的改动也卡死。
+- **未配置 required status checks**：仓库没有 PR 触发的 CI，配了 required check 会死锁。
+  `deploy.yml` 只在 push main 后部署 Pages，`qa.yml` 是部署后 canary——两者都不是合并门。
+
+## 自查清单（7 项，作者 push / 开 PR 前逐项核对）
 
 - [ ] Astro 模板：字符串替换补丁是否把属性挤到标签外（检查所有 `<Base>`/组件标签闭合）
 - [ ] `[hidden]` 属性是否有同名 CSS `display` 规则覆盖（全局 `[hidden]{display:none!important}` 已兜底，新增 CSS 不得破坏）
@@ -29,28 +39,13 @@
 - [ ] 生成代码的转义：预缓存清单/JSON 注入是否对单引号、中文、方括号做了处理
 - [ ] Python 脚本：`py_compile` 通过；无悬空函数引用
 
-## QA 状态矩阵（UI 变更必跑）
+清单随 bug 库更新：每修一个新类型 bug，把它的「检查方法」加进来。
 
-维度：`页面(videos/books/awards/bloggers/详情页) × 语言(zh/en) × 视口(desktop/mobile)`（RIGE-1021 起：每个视图一张真实静态页，`/` 重定向 `/videos/`，无 hash 模式）
+## QA 状态矩阵（部署后 canary，自动）
 
-每个组合断言：
-- [ ] 顶栏元素正确（下拉值、tab/chips 显隐与 aria-current、EN 位置、无裸文本泄漏）
-- [ ] 筛选行符合当前页面（/books/ 三行、/awards/ 仅 奖项语言 行）
-- [ ] 内容区正确（视频网格/书目网格/奖项卡片墙）
-- [ ] 计数样式统一 `shown / total`（四个列表页一致）
-- [ ] 标签已翻译（无残留中文于英文态的 UI 元素）
-- [ ] 卡片/详情页核心元素存在（评分、标签、链接按钮）
+`qa.yml` 在 Deploy 成功后自动对线上跑 `scripts/qa-check.mjs`（CDN 传播竞态自动重试 3 次）。
+维度与断言细则见 [docs/qa-matrix.md](qa-matrix.md)。
 
-部署后另跑：SW 注册（PWA）、manifest 可达、无 404 资源。
-
-## 执行方式
-
-- Review/QA 由主 agent 派发独立 sub agent 完成，**结果以评论形式记入对应 Multica issue**
-- Review 发现的问题直接修复后复审，但**复审轮次封顶 `MAX_ROUNDS = 2`**：
-  - 第 1 轮**全量审**（按「审查清单」逐项核对）
-  - 第 2 轮起只审**增量**，不重读全仓。增量复审的输入 = **上轮 review 报告绑定的 SHA** + **上轮 SHA → 本轮 head SHA 的增量 diff** + **上轮仍未关闭的 finding**
-  - 第 2 轮仍有 blocking finding ⇒ **停手并 ESCALATE**（分歧点 / 两种判据 / 复现证据）给 owner，**不自我迭代第 3 轮**
-  - 每轮报告写入 `docs/review-YYYY-MM-DD.md`，须标出**轮次号**与**所审增量范围**，供下一轮复审取用
-- QA 失败阻断发布
-- 清单随 bug 库更新：每修一个新类型 bug，把它的「检查方法」加进对应清单
-- QA 状态矩阵细则见 [docs/qa-matrix.md](qa-matrix.md)
+- QA **不是合并门**：它跑在部署之后，此时改动已经上线；QA 红 = 线上有问题，直接修 bug、重新部署。
+- 本地部署前预检可跑 `npm run qa:local`（对 `dist/` 预览产物），属作者自查的一部分，非强制。
+- QA 浏览器操作已脚本化（零 LLM token），agent 只负责读报告与修复失败项。

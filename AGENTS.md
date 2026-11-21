@@ -21,21 +21,19 @@ npm run qa           # QA 状态矩阵（对线上 https://tinycove.space/）
 npm run qa:local     # QA 状态矩阵（对本地 dist/，自动 build）
 ```
 
-## 多 Agent 协作工作流（重要）
+## 质量与合并机制（重要）
 
-本项目采用 **dev / review / QA 三角色协作**，详见 [docs/agent-workflow.md](docs/agent-workflow.md)：
+> 2026-11-21（RIGE-1834）修订：reviewer subagent 已退役（`.agents/agents/reviewer.md` 已删除）。
+> 现行机制详见 [docs/agent-workflow.md](docs/agent-workflow.md)：
 
-| 角色 | 职责 | 触发 |
-|---|---|---|
-| Dev | 功能实现、修复 | 常规 |
-| Review | 按清单审查 diff（7 项），最多 MAX_ROUNDS = 2 轮复审 | 每次 UI/管线改动 push 前 |
-| QA | 状态矩阵断言（桌面/手机 × 视频/图书 × 双语） | 每次部署后 |
-
-- Review/QA 由**独立 sub agent** 执行（定义在 `.zcode/agents/`），避免自查盲区
-- Review 结果写入 `docs/review-YYYY-MM-DD.md`，QA 结果写入 `docs/qa-report-*.md`
-- **复审轮次封顶 `MAX_ROUNDS = 2`**：第 1 轮全量审；第 2 轮起只审**增量**（上轮 review 报告绑定的 SHA → 本轮 head SHA 的 diff + 上轮仍未关闭的 finding），不再重读全仓；第 2 轮仍有 blocking finding ⇒ **停手并 ESCALATE**（分歧点 / 两种判据 / 复现证据）给 owner，**不自我迭代第 3 轮**
-- 审查清单与状态矩阵随 bug 库更新：每修一个新类型 bug，把检查方法加进对应清单
-- QA 浏览器操作已脚本化（`scripts/qa-check.mjs`，零 LLM token），agent 只负责读报告与修复失败项
+- **审查 = 作者自查**：push / 开 PR 前按 [docs/agent-workflow.md](docs/agent-workflow.md) 的 7 项清单逐项核对；清单随 bug 库更新（每修一个新类型 bug，把检查方法加进清单）
+- **合并门 = main 分支保护**（GitHub 平台强制，唯一的门）：
+  - require a pull request before merging：非 admin 禁止直推 main，改动一律走 PR
+  - require review from Code Owners（`.github/CODEOWNERS` = `* @kk17`）：**外部贡献者的 PR 必须 Kyle approve 才能合并**
+  - 未勾选「Do not allow bypassing」⇒ admin（Kyle）可 bypass，且 bypass 同时覆盖 required review——**对 Kyle 本人非强制，这是有意选择**（单人维护仓，勾了会把自己的改动也卡死）；强制力来自「Kyle 自己不绕」
+  - 未配置 required status checks（仓库没有 PR 触发的 CI，配了会死锁）
+- **QA = 部署后 canary**：`qa.yml` 在 Deploy 成功后自动对线上跑状态矩阵（`scripts/qa-check.mjs`，零 LLM token）。它**不阻断合并**（合并时改动已上线），红 = 线上有问题需尽快修复；本地部署前预检可跑 `npm run qa:local`
+- QA 失败项由 agent 读报告、诊断并修复（定义见 `.zcode/agents/qa.md`），修复后重跑至全绿
 
 ## 关键约定（踩过的坑，改动前必读）
 
@@ -48,7 +46,7 @@ npm run qa:local     # QA 状态矩阵（对本地 dist/，自动 build）
 - **封面**：豆瓣图床拒绝热链（418），一律用 `public/covers/` 自托管（build_books.py --covers 生成）
 - **数据快照**：`videos.json`/`books.json` 由管线生成，禁止手工编辑
 - **B 站 embed 必须带 aid+cid**：只给 bvid 时移动端播放器会被 B 站风控（412）拦截并显示「非常抱歉…无法正常播放」。新增 B 站视频后先跑 `scripts/backfill_embed.py`（补 aid/cid/合集，写 data/seasons.json）再跑 `build_data.py`
-- **sub agent 定义**：`.zcode/agents/` 下的 reviewer / qa；修改清单后同步更新
+- **sub agent 定义**：`.zcode/agents/` 下的 qa（reviewer 已于 2026-11-21 退役删除）；修改清单后同步更新
 
 ## 数据管线
 
