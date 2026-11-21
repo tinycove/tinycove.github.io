@@ -107,10 +107,16 @@ https://play.kk17.net/family/video-search/?keyword={url}&source={source}#/search
 欢迎 PR！修改数据快照前请先阅读 `scripts/tagging-guidelines.md` 的标签口径；
 新增内容请走数据管线而非手工编辑。站点 UI 改动请跑 `npm run build` 确认通过。
 
-### Agent 协作工作流
+### 质量与合并机制
 
-本项目采用 dev / review / QA 三角色协作：UI 改动需经独立 review agent 按清单审查，
-部署后由 QA agent 按状态矩阵在真实浏览器验证。详见 [docs/agent-workflow.md](docs/agent-workflow.md)。
+- **审查 = 作者自查**：push / 开 PR 前按 [docs/agent-workflow.md](docs/agent-workflow.md) 的 7 项清单逐项核对。
+- **合并门 = main 分支保护**（GitHub 平台强制）：外部贡献者的改动一律走 PR，
+  且必须获得 @kk17 的 approve 才能合并（`.github/CODEOWNERS`）。
+  站点 owner（admin）可 bypass 保护——对 owner 本人不强制，靠自觉不绕。
+- **QA = 部署后 canary**：`qa.yml` 在部署成功后自动对线上跑状态矩阵（不阻断合并）；
+  本地部署前预检可跑 `npm run qa:local`。
+
+详见 [docs/agent-workflow.md](docs/agent-workflow.md)。
 
 ## License
 

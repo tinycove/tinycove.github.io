@@ -112,11 +112,17 @@ PRs welcome! Please read `scripts/tagging-guidelines.md` before touching data sn
 and add content through the pipeline rather than editing snapshots by hand.
 Run `npm run build` to verify UI changes.
 
-### Agent workflow
+### Quality and merge gate
 
-This project uses a dev / review / QA three-role workflow: UI changes go through an
-independent review agent against a checklist, and deployments are verified by a QA agent
-running a state matrix in a real browser. See [docs/agent-workflow.md](docs/agent-workflow.md).
+- **Review = author self-check**: before pushing / opening a PR, go through the 7-item
+  checklist in [docs/agent-workflow.md](docs/agent-workflow.md).
+- **Merge gate = main branch protection** (enforced by GitHub): external contributions always
+  go through a PR and require approval from @kk17 (`.github/CODEOWNERS`) before merging.
+  The site owner (admin) can bypass the protection — it is not enforced on the owner personally.
+- **QA = post-deploy canary**: `qa.yml` automatically runs the state matrix against the live site
+  after a successful deploy (does not block merges); run `npm run qa:local` for a local pre-deploy check.
+
+See [docs/agent-workflow.md](docs/agent-workflow.md).
 
 ## License
 
