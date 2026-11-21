@@ -116,7 +116,7 @@ https://play.kk17.net/family/video-search/?keyword={url}&source={source}#/search
 - **QA = 部署后 canary**：`qa.yml` 在部署成功后自动对线上跑状态矩阵（不阻断合并）；
   本地部署前预检可跑 `npm run qa:local`。
 
-详见 [docs/agent-workflow.md](docs/agent-workflow.md)（RIGE-1834 合并门实测分支，本 PR 不会被合并）。
+详见 [docs/agent-workflow.md](docs/agent-workflow.md)。
 
 ## License
 
